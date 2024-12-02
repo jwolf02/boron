@@ -17,10 +17,16 @@ set(Boron_LibSources
     lib/cbor/DataModel.h
     lib/cbor/DataModelBase.cpp
     lib/cbor/DataModelBase.h
+    lib/cbor/Decoding.cpp
+    lib/cbor/Decoding.h
     lib/cbor/Decoder.cpp
     lib/cbor/Decoder.h
     lib/cbor/Encoder.cpp
     lib/cbor/Encoder.h
+    lib/cbor/Encoding.cpp
+    lib/cbor/Encoding.h
+    lib/cbor/Errors.h
+    lib/cbor/Header.h
     lib/cbor/Item.cpp
     lib/cbor/Item.h
     lib/cbor/Tags.h
@@ -32,6 +38,8 @@ add_library(boron ${Boron_LibSources})
 target_include_directories(boron PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 set(Boron_ToolSources
+    src/Functions.cpp
+    src/Functions.h
     src/main.cpp
     )
 

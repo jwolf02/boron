@@ -6,6 +6,7 @@
 
 #include <array>
 #include <type_traits>
+#include <utility>
 
 #if __cplusplus >= 202000L
 #include <span>
@@ -75,9 +76,38 @@ inline T fromBytes(std::span<const uint8_t> bytes, Endianess endianess = Endiane
     return cvt.x;
 }
 
+template <typename T>
+    requires(std::is_fundamental_v<T>)
+std::span<const uint8_t> asBytes(const T& x)
+{
+    return {(const uint8_t*)&x, sizeof(x)};
+}
+
 inline constexpr bool isHexDigit(char c)
 {
     return (c >= 'a' && c <= 'f') || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');
+}
+
+inline std::string bytesToString(std::span<const uint8_t> bytes, bool prefix = false)
+{
+    auto byteToChars = [](uint8_t byte) -> std::pair<char, char>
+    {
+        constexpr char CHARS[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+        return {CHARS[byte >> 4], CHARS[byte & 0x0f]};
+    };
+    
+    std::string str;
+    str.reserve((prefix ? 2 : 0) + bytes.size() * 2);
+    str = prefix ? "0x" : "";
+
+    for (const auto& byte : bytes)
+    {
+        const auto tmp = byteToChars(byte);
+        str.push_back(tmp.first);
+        str.push_back(tmp.second);
+    }
+
+    return str;
 }
 
 /***
@@ -119,6 +149,18 @@ constexpr inline uint8_t parseByte(char upper, char lower)
 {
     return (uint8_t)(parseNibble(upper) << 4) | parseNibble(lower);
 }
+
+inline std::vector<uint8_t> parseBytes(std::string_view str)
+{
+    std::vector<uint8_t> out;
+    out.reserve(str.size() / 2);
+    for (size_t i = 0; i < str.size(); i += 2)
+    {
+        out.push_back(parseByte(str[i], str[i + 1]));
+    }
+
+    return out;
+} 
 
 namespace Literals
 {

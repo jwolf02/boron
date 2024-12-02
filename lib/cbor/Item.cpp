@@ -1,6 +1,7 @@
 #include "Item.h"
 
 #include "DataModelBase.h"
+#include "../Bytes.h"
 
 size_t CBOR::Item::size() const
 {
@@ -99,6 +100,92 @@ void CBOR::Item::setValue(ValueBuilder value)
         default:
         {
             break;
+        }
+    }
+}
+
+std::string CBOR::Item::toString(bool withTag)
+{
+    if (bool(*this) == false)
+    {
+        return "";
+    }
+
+    if (tag() == Tag::INVALID || withTag == false)
+    {
+        return toStringInternal();
+    }
+
+    std::string str = "<";
+    str += (uint64_t)tag();
+    str += ": ";
+    str += toStringInternal();
+
+    return str + '>';
+}
+
+std::string CBOR::Item::toStringInternal()
+{
+    switch (type())
+    {
+        case Type::INTEGER:
+        {
+            return std::to_string(toInt());
+        }
+        case Type::BYTES:
+        {
+            return Bytes::bytesToString(toByteString(), true);
+        }
+        case Type::STRING:
+        {
+            const auto text = toTextString();
+            return std::string(text.data(), text.size());
+        }
+        case Type::ARRAY:
+        {
+            std::string str = "[ ";
+            for (auto child = begin(); bool(child); child = child.sibling())
+            {
+                str += child.toString();
+                if (bool(child.sibling()))
+                {
+                    str += ", ";
+                }
+            }
+
+            return str + " ]";
+        }
+        case Type::MAP:
+        {
+            std::string str = "{ ";
+            for (auto child = begin(); bool(child); child = child.sibling())
+            {
+                str += child.key().toString();
+                str += ": ";
+                str += child.toString();
+                if (bool(child.sibling()))
+                {
+                    str += ", ";
+                }
+            }
+
+            return str + " }";
+        }
+        case Type::FLOAT:
+        {
+            return std::to_string(toFloat());
+        }
+        case Type::BOOL:
+        {
+            return toBool() ? "true" : "false";
+        }
+        case Type::NULLVAL:
+        {
+            return "null";
+        }
+        case Type::UNDEFINED:
+        {
+            return "undefined";
         }
     }
 }

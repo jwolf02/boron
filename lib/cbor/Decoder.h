@@ -9,6 +9,7 @@
 #include "Item.h"
 #include "DataModel.h"
 #include "Bytes.h"
+#include "../Buffers.h"
 
 namespace CBOR
 {

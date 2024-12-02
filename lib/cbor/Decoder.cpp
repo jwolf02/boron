@@ -128,7 +128,7 @@ CBOR::item_t* CBOR::Decoder::decodeInteger(InitByte init)
     auto* item = _model.itemAllocator().allocate();
     if (item == nullptr)
     {
-        _error = Error::ALLOC_FAILED;
+        _error = Error::ITEM_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -154,7 +154,7 @@ CBOR::item_t* CBOR::Decoder::decodeByteString(InitByte init)
     auto* item = _model.itemAllocator().allocate();
     if (item == nullptr)
     {
-        _error = Error::ALLOC_FAILED;
+        _error = Error::ITEM_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -167,7 +167,7 @@ CBOR::item_t* CBOR::Decoder::decodeByteString(InitByte init)
     auto* blob = _model.blobAllocator().allocate(*length, pop(*length));
     if (blob == nullptr)
     {
-        _error = Error::ALLOC_FAILED;
+        _error = Error::BLOB_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -188,7 +188,7 @@ CBOR::item_t* CBOR::Decoder::decodeTextString(InitByte init)
     auto* item = _model.itemAllocator().allocate();
     if (item == nullptr)
     {
-        _error = Error::ALLOC_FAILED;
+        _error = Error::ITEM_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -201,7 +201,7 @@ CBOR::item_t* CBOR::Decoder::decodeTextString(InitByte init)
     auto* blob = _model.blobAllocator().allocate(*length, pop(*length));
     if (blob == nullptr)
     {
-        _error = Error::ALLOC_FAILED;
+        _error = Error::BLOB_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -222,7 +222,7 @@ CBOR::item_t* CBOR::Decoder::decodeArray(InitByte init)
     auto* array = _model.itemAllocator().allocate();
     if (array == nullptr)
     {
-       _error = Error::ALLOC_FAILED;
+       _error = Error::ITEM_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -257,7 +257,7 @@ CBOR::item_t* CBOR::Decoder::decodeMap(InitByte init)
     auto* map = _model.itemAllocator().allocate();
     if (map == nullptr)
     {
-        _error = Error::ALLOC_FAILED;
+        _error = Error::ITEM_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -270,6 +270,12 @@ CBOR::item_t* CBOR::Decoder::decodeMap(InitByte init)
         if (key == nullptr)
         {
             break;
+        }
+
+        if (key->type != Type::INTEGER && key->type != Type::STRING)
+        {
+            _error = Error::UNSUPPORTED_KEY_TYPE;
+            return nullptr;
         }
 
         auto* value = decodeAnything();
@@ -330,6 +336,7 @@ CBOR::item_t* CBOR::Decoder::decodeFloatOrSimple(InitByte init)
         {
             return decodeFloat(init);
         }
+        case FloatOrSimpleArgumentType::BREAK:
         default:
         {
             _error = Error::MALFORMED_MESSAGE;
@@ -345,7 +352,7 @@ CBOR::item_t* CBOR::Decoder::decodeFloat(InitByte init)
     auto* item = _model.itemAllocator().allocate();
     if (item == nullptr)
     {
-        _error = Error::ALLOC_FAILED;
+        _error = Error::ITEM_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -378,7 +385,7 @@ CBOR::item_t* CBOR::Decoder::decodeSimple(InitByte init)
     auto* item = _model.itemAllocator().allocate();
     if (item == nullptr)
     {
-        _error = Error::ALLOC_FAILED;
+        _error = Error::ITEM_ALLOC_FAILED;
         return nullptr;
     }
 
@@ -406,7 +413,8 @@ CBOR::item_t* CBOR::Decoder::decodeSimple(InitByte init)
         }
         default:
         {
-            break;
+            _error = Error::UNSUPPORTED_SIMPLE;
+            return nullptr;
         }
     }
 

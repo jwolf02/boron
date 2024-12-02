@@ -4,15 +4,44 @@
 #include <cstddef>
 
 #include <algorithm>
+#include <type_traits>
 
 #include "cbor/Types.h"
+#include "Bytes.h"
 
 class InputBuffer
 {
 public:
     virtual bool read(uint8_t& x) = 0;
 
-    virtual bool read(std::span<uint8_t> data) = 0;
+    virtual std::span<const uint8_t> readSpan(size_t n) = 0;
+
+    template <typename T>
+        requires(std::is_fundamental_v<T>)
+    bool read(T& x, Bytes::Endianess endianness = Bytes::Endianess::NATIVE)
+    {
+        union
+        {
+            T x;
+
+            std::array<uint8_t, sizeof(T)> bytes;
+        } cvt;
+
+        for (int i = 0; i < sizeof(T); ++i)
+        {
+            if (read(cvt.bytes[i]) == false)
+            {
+                return false;
+            }
+        }
+
+        if (endianness != Bytes::Endianess::NATIVE)
+        {
+            std::reverse(cvt.bytes.begin(), cvt.bytes.end());
+        }
+
+        return cvt.x;
+    }
 
     virtual size_t size() const = 0;
 
@@ -21,6 +50,7 @@ public:
 
 class OutputBuffer
 {
+public:
     virtual bool write(uint8_t x) = 0;
 
     virtual bool write(std::span<const uint8_t> data) = 0;
@@ -47,16 +77,16 @@ public:
         return true;
     }
 
-    constexpr bool read(std::span<uint8_t> data) override
+    constexpr std::span<const uint8_t> readSpan(size_t length) override
     {
-        if ((capacity() - size()) < data.size())
+        if ((capacity() - size()) < length)
         {
-            return false;
+            return {};
         }
 
-        std::copy(_data.begin() + size(), _data.begin() + size() + data.size(), data.begin());
-        _size += data.size();
-        return true;
+        const std::span<const uint8_t> x = {_data.data() + _size, length};
+        _size += length;
+        return x;
     }
 
     constexpr size_t size() const override

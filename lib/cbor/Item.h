@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include <string>
+
 #include "Types.h"
 #include "ValueBuilder.h"
 #include "Tags.h"
@@ -110,7 +112,11 @@ public:
 
     void setValue(ValueBuilder value);
 
+    std::string toString(bool withTag = true);
+
 private:
+    std::string toStringInternal();
+
     item_t* _item = nullptr;
 
     DataModelBase* _model = nullptr;

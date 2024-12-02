@@ -18,21 +18,13 @@ using span = etl::span;
 #endif
 
 #include "Tags.h"
+#include "Errors.h"
 
 namespace CBOR
 {
 using Integer = uint64_t;
 using Float = double;
 using Boolean = bool;
-
-enum class Error
-{
-    OK = 0,
-    ALLOC_FAILED,
-    UNEXPECTED_EOF,
-    UNSUPPORTED_DATATYPE,
-    MALFORMED_MESSAGE
-};
 
 enum class MajorType : uint8_t
 {
@@ -59,12 +51,12 @@ enum class Type : uint8_t
     UNDEFINED
 };
 
-enum class Simple
+enum class Simple : uint8_t
 {
-    TRUE,
-    FALSE,
-    NULLVAL,
-    UNDEFINED
+    FALSE = 20,
+    TRUE = 21,
+    NULLVAL = 22,
+    UNDEFINED = 23
 };
 
 constexpr uint8_t MAX_ARGUMENT_VALUE_IN_REMAINDER = 23;
@@ -86,7 +78,8 @@ enum class FloatOrSimpleArgumentType : uint8_t
     UNDEFINED = 23,
     FLOAT16 = 25,
     FLOAT32 = 26,
-    FLOAT64 = 27
+    FLOAT64 = 27,
+    BREAK = 31
 };
 
 class InitByte
@@ -94,6 +87,9 @@ class InitByte
 public:
     constexpr InitByte(uint8_t x) :
         _majorType((MajorType)(x >> 5)), _remainder(x & 0x1f) {}
+
+    constexpr InitByte(MajorType majorType, uint8_t remainder) :
+        _majorType(majorType), _remainder(remainder) {}
 
     constexpr MajorType majorType() const
     {
@@ -103,6 +99,11 @@ public:
     constexpr uint8_t argument() const
     {
         return _remainder;
+    }
+
+    constexpr operator uint8_t() const
+    {
+        return ((uint8_t)_majorType) << 5 | _remainder;
     }
 
 private:
