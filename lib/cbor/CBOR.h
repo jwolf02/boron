@@ -1,8 +1,6 @@
-#ifndef BORON_BORON_H_
-#define BORON_BORON_H_
+#ifndef BORON_CBOR_CBOR_H_
+#define BORON_CBOR_CBOR_H_
 
-namespace Boron
-{
 #include "cbor/Allocators.h"
 #include "cbor/DataModel.h"
 #include "cbor/DataModelBase.h"
@@ -12,6 +10,5 @@ namespace Boron
 #include "cbor/Tags.h"
 #include "cbor/Types.h"
 #include "cbor/ValueBuilder.h"
-} // namespace Boron
 
-#endif // BORON_BORON_H_
+#endif // BORON_CBOR_CBOR_H_

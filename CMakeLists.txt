@@ -8,29 +8,36 @@ set(Boron_Includes
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
 
-set(Boron_Sources
-    src/Boron.h
-    src/Buffers.h
-    src/Bytes.h
-    src/Deserializable.h
-    src/Serializable.h
-    src/cbor/Allocators.h
-    src/cbor/DataModel.h
-    src/cbor/DataModelBase.cpp
-    src/cbor/DataModelBase.h
-    src/cbor/Decoder.cpp
-    src/cbor/Decoder.h
-    src/cbor/Encoder.cpp
-    src/cbor/Encoder.h
-    src/cbor/Item.cpp
-    src/cbor/Item.h
-    src/cbor/Tags.h
-    src/cbor/Types.h
-    src/cbor/ValueBuilder.h
+set(Boron_LibSources
+    lib/Buffers.h
+    lib/Bytes.h
+    lib/Deserializable.h
+    lib/Serializable.h
+    lib/cbor/Allocators.h
+    lib/cbor/DataModel.h
+    lib/cbor/DataModelBase.cpp
+    lib/cbor/DataModelBase.h
+    lib/cbor/Decoder.cpp
+    lib/cbor/Decoder.h
+    lib/cbor/Encoder.cpp
+    lib/cbor/Encoder.h
+    lib/cbor/Item.cpp
+    lib/cbor/Item.h
+    lib/cbor/Tags.h
+    lib/cbor/Types.h
+    lib/cbor/ValueBuilder.h
     )
 
-add_library(boron ${Boron_Sources})
-target_include_directories(boron PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_library(boron ${Boron_LibSources})
+target_include_directories(boron PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+
+set(Boron_ToolSources
+    src/main.cpp
+    )
+
+add_executable(borontool ${Boron_ToolSources})
+target_include_directories(borontool PUBLIC ${Boron_Includes})
+target_link_libraries(borontool PUBLIC boron)
 
 include(FetchContent)
 FetchContent_Declare(
