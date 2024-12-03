@@ -40,7 +40,9 @@ public:
             std::reverse(cvt.bytes.begin(), cvt.bytes.end());
         }
 
-        return cvt.x;
+        x = cvt.x;
+
+        return true;
     }
 
     virtual size_t size() const = 0;
@@ -53,7 +55,33 @@ class OutputBuffer
 public:
     virtual bool write(uint8_t x) = 0;
 
-    virtual bool write(std::span<const uint8_t> data) = 0;
+    virtual bool write(std::span<const uint8_t> data, Bytes::Endianess endianess = Bytes::Endianess::NATIVE)
+    {
+        for (size_t i = 0; i < data.size(); ++i)
+        {
+            const auto index = endianess == Bytes::Endianess::NATIVE ? i : data.size() - i - 1;
+            if (write(data[index]) == false)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template <typename T>
+        requires(std::is_fundamental_v<T>)
+    bool write(const T& x, Bytes::Endianess endianess = Bytes::Endianess::NATIVE)
+    {
+        auto bytes = Bytes::getBytes(x);
+
+        if (endianess != Bytes::Endianess::NATIVE)
+        {
+            std::reverse(bytes.begin(), bytes.end());
+        }
+
+        return write(bytes);
+    }
 
     virtual size_t size() const = 0;
 
@@ -102,6 +130,60 @@ public:
 private:
     std::span<const uint8_t> _data;
 
+    size_t _size = 0;
+};
+
+class SpanOutputBuffer : public OutputBuffer 
+{
+public:
+    constexpr SpanOutputBuffer() = default;
+
+    constexpr SpanOutputBuffer(std::span<uint8_t> data) :
+        _data(data) {}
+
+    bool write(uint8_t x) override
+    {
+        if (size() >= capacity())
+        {  
+            return false;
+        }
+
+        _data[_size++] = x;
+
+        return true;
+    }
+
+    bool write(std::span<const uint8_t> data, Bytes::Endianess endianness) override
+    {
+        if ((size() + data.size()) >= capacity())
+        {
+            return false;
+        }
+
+        std::copy(data.begin(), data.end(), _data.begin() + size());
+        if (endianness != Bytes::Endianess::NATIVE)
+        {
+            std::reverse(_data.begin() + size(), _data.begin() + size() + data.size());
+        }
+
+        _size += data.size();
+
+        return true;
+    }
+
+    constexpr size_t size() const override
+    {
+        return _size;
+    }
+
+    constexpr size_t capacity() const override 
+    {
+        return _data.size();
+    }
+
+private:
+    std::span<uint8_t> _data;
+    
     size_t _size = 0;
 };
 

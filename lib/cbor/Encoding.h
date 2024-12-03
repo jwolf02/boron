@@ -12,7 +12,17 @@
 
 namespace CBOR::Encoding
 {
-CBOR::Error encode(OutputBuffer& buffer, InitByte initByte, std::span<const uint8_t> argument, std::span<const uint8_t> payload = {});
+/***
+ * Encode a CBOR item to the buffer.
+ * 
+ * @param buffer The output buffer.
+ * @param majorType The major type to be encoded.
+ * @param argument The init byte's argument.
+ * @param payload The optional payload of the item (e.g. the bytes of a byte string)
+ * 
+ * @return Error
+ */
+CBOR::Error encode(OutputBuffer& buffer, MajorType majorType, uint64_t argument, std::span<const uint8_t> payload = {});
 
 CBOR::Error encode(OutputBuffer& buffer, int64_t argument);
 
