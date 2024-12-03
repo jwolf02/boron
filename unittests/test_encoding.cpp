@@ -117,6 +117,37 @@ TEST(CBOR_Encoding, Encode_Decode_ByteString)
     }
 }
 
+TEST(CBOR_Encoding, Encode_Decode_TextString)
+{
+    constexpr auto STRING = "Hello World"sv;
+    constexpr auto LENGTH = STRING.size();
+
+    std::array<uint8_t, 16> data;
+
+    // Encode
+    {
+        SpanOutputBuffer buffer(data);
+        ASSERT_EQ(CBOR::Encoding::encode(buffer, STRING), CBOR::Error::OK);
+        ASSERT_EQ(buffer.size(), LENGTH + 1);
+    }
+
+    // Decode
+    {
+        SpanInputBuffer buffer(data);
+        const auto [error, header] = CBOR::Decoding::decode(buffer);
+        ASSERT_EQ(error, CBOR::Error::OK);
+
+        EXPECT_EQ(header.majorType(), CBOR::MajorType::TEXT_STRING);
+        EXPECT_EQ(header.argument(), LENGTH);
+        EXPECT_EQ(header.payload().size(), LENGTH);
+
+        for (size_t i = 0; i < LENGTH; ++i)
+        {
+            EXPECT_EQ(header.payload()[i], STRING[i]);
+        }
+    }
+}
+
 TEST(CBOR_Encoding, Encode_Decode_Array)
 {
     constexpr auto LENGTH = INT64_C(3);
@@ -159,33 +190,64 @@ TEST(CBOR_Encoding, Encode_Decode_Array)
     }
 }
 
-TEST(CBOR_Encoding, Encode_Decode_TextString)
+TEST(CBOR_Encoding, Encode_Decode_Map)
 {
-    constexpr auto STRING = "Hello World"sv;
-    constexpr auto LENGTH = STRING.size();
+    constexpr auto LENGTH = INT64_C(3);
+    constexpr auto TEXT = "Hello"sv;
 
-    std::array<uint8_t, 16> data;
+    std::array<uint8_t, 256> data;
 
     // Encode
     {
         SpanOutputBuffer buffer(data);
-        ASSERT_EQ(CBOR::Encoding::encode(buffer, STRING), CBOR::Error::OK);
-        ASSERT_EQ(buffer.size(), LENGTH + 1);
+        ASSERT_EQ(CBOR::Encoding::encode(buffer, CBOR::MajorType::MAP, 3), CBOR::Error::OK);
+        for (int64_t i = 0; i < LENGTH; ++i)
+        {
+            ASSERT_EQ(CBOR::Encoding::encode(buffer, i), CBOR::Error::OK); // key
+            ASSERT_EQ(CBOR::Encoding::encode(buffer, TEXT), CBOR::Error::OK); // value
+        }
     }
 
     // Decode
     {
         SpanInputBuffer buffer(data);
-        const auto [error, header] = CBOR::Decoding::decode(buffer);
-        ASSERT_EQ(error, CBOR::Error::OK);
-
-        EXPECT_EQ(header.majorType(), CBOR::MajorType::TEXT_STRING);
-        EXPECT_EQ(header.argument(), LENGTH);
-        EXPECT_EQ(header.payload().size(), LENGTH);
-
-        for (size_t i = 0; i < LENGTH; ++i)
+        // Array header
         {
-            EXPECT_EQ(header.payload()[i], STRING[i]);
+            const auto [error, header] = CBOR::Decoding::decode(buffer);
+            ASSERT_EQ(error, CBOR::Error::OK);
+
+            EXPECT_EQ(header.majorType(), CBOR::MajorType::MAP);
+            EXPECT_EQ(header.argument(), LENGTH);
+            EXPECT_TRUE(header.payload().empty());
+        }
+
+        // Array elements
+        for (uint64_t i = 0; i < LENGTH; ++i)
+        {
+            // key
+            {
+                const auto [error, header] = CBOR::Decoding::decode(buffer);
+                ASSERT_EQ(error, CBOR::Error::OK);
+
+                EXPECT_EQ(header.majorType(), CBOR::MajorType::UNSIGNED_INT);
+                EXPECT_EQ(header.argument(), i);
+                EXPECT_TRUE(header.payload().empty());
+            }
+
+            // value
+            {
+                const auto [error, header] = CBOR::Decoding::decode(buffer);
+                ASSERT_EQ(error, CBOR::Error::OK);
+
+                EXPECT_EQ(header.majorType(), CBOR::MajorType::TEXT_STRING);
+                EXPECT_EQ(header.argument(), TEXT.size());
+                EXPECT_EQ(header.payload().size(), TEXT.size());
+
+                for (size_t i = 0; i < LENGTH; ++i)
+                {
+                    EXPECT_EQ(header.payload()[i], TEXT[i]);
+                }
+            }
         }
     }
 }
