@@ -88,21 +88,21 @@ inline constexpr bool isHexDigit(char c)
     return (c >= 'a' && c <= 'f') || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');
 }
 
+inline constexpr std::pair<char, char> toHex(uint8_t byte)
+{
+    constexpr char CHARS[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    return std::make_pair(CHARS[byte >> 4], CHARS[byte & 0x0f]);
+}
+
 inline std::string bytesToString(std::span<const uint8_t> bytes, bool prefix = false)
 {
-    auto byteToChars = [](uint8_t byte) -> std::pair<char, char>
-    {
-        constexpr char CHARS[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-        return {CHARS[byte >> 4], CHARS[byte & 0x0f]};
-    };
-    
     std::string str;
     str.reserve((prefix ? 2 : 0) + bytes.size() * 2);
     str = prefix ? "0x" : "";
 
     for (const auto& byte : bytes)
     {
-        const auto tmp = byteToChars(byte);
+        const auto tmp = toHex(byte);
         str.push_back(tmp.first);
         str.push_back(tmp.second);
     }

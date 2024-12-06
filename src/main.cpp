@@ -53,16 +53,25 @@ int main(int argc, const char* argv[])
     {
         return help();
     }
-    else if (command == "--inspect")
+    else if (command == "--encode" || command == "-e")
+    {
+    }
+    else if (command == "--decode" || command == "-d")
     {
         if (args.size() < 1)
         {
-            printf("Usage: borontool --inspect <INPUT>\n");
+            printf("Usage: borontool --decode [--packed] <INPUT>\n");
             return EXIT_FAILURE;
         }
 
-        const auto bytes = parseBytesOrLoadFile(args[0]);
-        const auto [error, str] = Boron::inspect(bytes);
+        bool packed = false;
+        if (args.size() == 2 && (args[0] == "--packed" || args[0] == "-p"))
+        {
+            packed = true;
+        }
+
+        const auto bytes = parseBytesOrLoadFile(args.back());
+        const auto [error, str] = Boron::decode(bytes, packed ? Boron::StringFormat::PACKED : Boron::StringFormat::INDENTED);
         if (error != CBOR::Error::OK)
         {
             printf("Error: %s\n", CBOR::toString(error));
@@ -72,13 +81,6 @@ int main(int argc, const char* argv[])
         {
             printf("%s\n", str.c_str());
         }
-    }
-    else if (command == "--decode")
-    {
-        
-    }
-    else if (command == "--encode")
-    {
     }
     else
     {

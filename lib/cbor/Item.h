@@ -81,6 +81,16 @@ public:
         return IF_VALID(type() == Type::BOOL && _item->members.value.s == Simple::TRUE, false);
     }
 
+    constexpr bool isNull() const
+    {
+        return IF_VALID(type() == Type::NULLVAL, false);
+    }
+
+    constexpr bool isUndefined() const
+    {
+        return IF_VALID(type() == Type::UNDEFINED, false);
+    }
+
     constexpr std::span<const uint8_t> toByteString() const
     {
         return IF_VALID(_item->members.value.blob, std::span<uint8_t>());

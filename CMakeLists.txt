@@ -32,6 +32,10 @@ set(Boron_LibSources
     lib/cbor/Tags.h
     lib/cbor/Types.h
     lib/cbor/ValueBuilder.h
+    lib/json/Decoder.h
+    lib/json/Encoder.cpp
+    lib/json/Encoder.h
+    lib/json/Types.h
     )
 
 add_library(boron ${Boron_LibSources})

@@ -46,8 +46,6 @@ public:
     }
 
     virtual size_t size() const = 0;
-
-    virtual size_t capacity() const = 0;
 };
 
 class OutputBuffer
@@ -84,8 +82,6 @@ public:
     }
 
     virtual size_t size() const = 0;
-
-    virtual size_t capacity() const = 0;
 };
 
 class SpanInputBuffer : public InputBuffer
@@ -122,7 +118,7 @@ public:
         return _size;
     }
 
-    constexpr size_t capacity() const override
+    constexpr size_t capacity() const
     {
         return _data.size();
     }
@@ -176,7 +172,7 @@ public:
         return _size;
     }
 
-    constexpr size_t capacity() const override 
+    constexpr size_t capacity() const 
     {
         return _data.size();
     }
@@ -185,6 +181,36 @@ private:
     std::span<uint8_t> _data;
     
     size_t _size = 0;
+};
+
+class DynamicOutputBuffer : public OutputBuffer
+{
+public:
+    DynamicOutputBuffer() = default;
+
+    bool write(uint8_t x) override
+    {
+        _data.push_back(x);
+        return true;
+    }
+
+    uint8_t* data()
+    {
+        return _data.data();
+    }
+
+    const uint8_t* data() const
+    {
+        return _data.data();
+    }
+
+    size_t size() const override
+    {
+        return _data.size();
+    }
+
+private:
+    std::vector<uint8_t> _data;
 };
 
 #endif // BORON_BUFFERS_H_

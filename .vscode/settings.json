@@ -63,6 +63,7 @@
         "unordered_set": "cpp",
         "variant": "cpp",
         "algorithm": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "climits": "cpp"
     }
 }

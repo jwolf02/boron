@@ -12,14 +12,11 @@
 
 namespace Boron
 {
-/***
- * Inspect a CBOR message. Showing the internal structure and data types.
- * 
- * @param input The binary input.
- * 
- * @return A pair containing the status of the inspection and the inspected message if successful.
- */
-std::pair<CBOR::Error, std::string> inspect(std::span<const uint8_t> input);
+enum class StringFormat
+{
+    PACKED = 0,
+    INDENTED
+};
 
 /***
  * Encode a CBOR message from an Extended JSON string.
@@ -37,7 +34,7 @@ std::pair<CBOR::Error, std::vector<uint8_t>> encode(std::string_view input);
  * 
  * @output A pair containing the status of the decoding and the (Extended) JSON string if successful.
  */
-std::pair<CBOR::Error, std::string> decode(std::span<const uint8_t> input);
+std::pair<CBOR::Error, std::string> decode(std::span<const uint8_t> input, StringFormat format = StringFormat::INDENTED);
 } // namespace Boron
 
 #endif // BORON_FUNCTIONS_H_
